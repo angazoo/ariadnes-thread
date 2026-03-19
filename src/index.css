@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-cream text-warm-text font-sans antialiased;
+  }
+
+  ::selection {
+    background: rgba(124, 154, 130, 0.2);
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-6 py-3 rounded-2xl font-medium transition-all duration-200
+      bg-warm-text text-cream hover:bg-warm-text/90 active:scale-[0.98];
+  }
+
+  .btn-ghost {
+    @apply px-4 py-2 rounded-xl font-medium transition-all duration-200
+      text-warm-muted hover:text-warm-text hover:bg-warm-white active:scale-[0.98];
+  }
+
+  .card {
+    @apply bg-white rounded-2xl border border-warm-border p-4
+      transition-all duration-200;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.35s ease-out;
+}

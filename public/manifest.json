@@ -1,0 +1,16 @@
+{
+  "name": "Ariadne's Thread",
+  "short_name": "Ariadne",
+  "description": "A daily practice for foraging minds",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAF8F5",
+  "theme_color": "#FAF8F5",
+  "icons": [
+    {
+      "src": "/thread.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
