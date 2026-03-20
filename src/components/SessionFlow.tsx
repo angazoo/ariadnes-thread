@@ -4,6 +4,7 @@ import { db, saveSession, getSettings } from '../lib/db'
 import { useNavigation } from '../lib/store'
 import type { Category, Session, SessionPhase } from '../lib/types'
 import { getTodayDate } from '../lib/utils'
+import type { DayPlan } from '../lib/types'
 import CategoryPicker from './CategoryPicker'
 import IntentionStep from './IntentionStep'
 import DurationPicker from './DurationPicker'
@@ -27,6 +28,10 @@ export default function SessionFlow() {
     db.categories.orderBy('sortOrder').toArray()
   )
   const settings = useLiveQuery(() => getSettings())
+  const dayPlan = useLiveQuery(
+    () => db.dayPlans.get(getTodayDate()) as Promise<DayPlan | undefined>,
+    []
+  )
 
   const [phase, setPhase] = useState<SessionPhase>('category')
   const [state, setState] = useState<SessionState>({
@@ -129,6 +134,7 @@ export default function SessionFlow() {
           categories={categories}
           onSelect={handleCategorySelect}
           onCancel={goHome}
+          plannedIds={dayPlan?.categoryIds}
         />
       )}
 

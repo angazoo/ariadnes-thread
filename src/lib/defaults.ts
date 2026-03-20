@@ -6,6 +6,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
     name: 'Forage',
     emoji: '🌿',
     colorKey: 'forage',
+    tier: 'treat',
     intentionPrompts: [
       'What are you curious about right now?',
       'What thread are you following?',
@@ -18,6 +19,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
       'What can you close or let go of?',
     ],
     isDefault: true,
+    archived: false,
     sortOrder: 0,
   },
   {
@@ -25,6 +27,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
     name: 'Build',
     emoji: '🔨',
     colorKey: 'build',
+    tier: 'building',
     intentionPrompts: [
       'What are you building or working on?',
       'What does "done" look like for this session?',
@@ -37,6 +40,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
       'Anything blocking you?',
     ],
     isDefault: true,
+    archived: false,
     sortOrder: 1,
   },
   {
@@ -44,6 +48,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
     name: 'Write',
     emoji: '✏️',
     colorKey: 'write',
+    tier: 'building',
     intentionPrompts: [
       'What are you writing?',
       'Are you drafting, editing, or finishing?',
@@ -56,13 +61,35 @@ export const DEFAULT_CATEGORIES: Category[] = [
       'Where does this draft live?',
     ],
     isDefault: true,
+    archived: false,
     sortOrder: 2,
+  },
+  {
+    id: 'tend',
+    name: 'Tend',
+    emoji: '🌱',
+    colorKey: 'tend',
+    tier: 'foundation',
+    intentionPrompts: [
+      'What existing work needs your attention?',
+      'What are you refining or revisiting?',
+      'Is this editing, organizing, or maintaining?',
+    ],
+    debriefPrompts: [
+      'What did you tend to?',
+      'Is it in better shape now?',
+      'Anything else that needs tending?',
+    ],
+    isDefault: true,
+    archived: false,
+    sortOrder: 3,
   },
   {
     id: 'engage',
     name: 'Engage',
     emoji: '💬',
     colorKey: 'engage',
+    tier: 'building',
     intentionPrompts: [
       'Who or what are you engaging with?',
       "What's your purpose here?",
@@ -75,13 +102,15 @@ export const DEFAULT_CATEGORIES: Category[] = [
       'Ready to close this channel?',
     ],
     isDefault: true,
-    sortOrder: 3,
+    archived: false,
+    sortOrder: 4,
   },
   {
     id: 'digest',
     name: 'Digest',
     emoji: '🫖',
     colorKey: 'digest',
+    tier: 'foundation',
     intentionPrompts: [
       'What are you processing or organizing?',
       'What accumulated stuff needs attention?',
@@ -93,13 +122,35 @@ export const DEFAULT_CATEGORIES: Category[] = [
       'How do you feel after clearing some space?',
     ],
     isDefault: true,
-    sortOrder: 4,
+    archived: false,
+    sortOrder: 5,
+  },
+  {
+    id: 'process',
+    name: 'Process',
+    emoji: '🧠',
+    colorKey: 'process',
+    tier: 'building',
+    intentionPrompts: [
+      'What are you thinking through?',
+      'What connections are you trying to make?',
+      'Are you processing alone or with someone/AI?',
+    ],
+    debriefPrompts: [
+      'What became clearer?',
+      'Any new connections or insights?',
+      'What still needs processing?',
+    ],
+    isDefault: true,
+    archived: false,
+    sortOrder: 6,
   },
   {
     id: 'admin',
     name: 'Admin',
     emoji: '📋',
     colorKey: 'admin',
+    tier: 'foundation',
     intentionPrompts: [
       'What logistics are you handling?',
       "What's the most important admin task right now?",
@@ -111,7 +162,8 @@ export const DEFAULT_CATEGORIES: Category[] = [
       'Any deadlines or follow-ups?',
     ],
     isDefault: true,
-    sortOrder: 5,
+    archived: false,
+    sortOrder: 7,
   },
 ]
 
@@ -120,3 +172,10 @@ export const DEFAULT_SETTINGS: AppSettings = {
   defaultWorkMinutes: 45,
   defaultDigestMinutes: 10,
 }
+
+export const EVENING_PROMPTS = [
+  "How aligned was today with what you're building?",
+  'Was it mostly exciting but nutritionally empty, or genuinely nourishing?',
+  "What's one thing you'd do differently tomorrow?",
+  'What felt most alive today?',
+]

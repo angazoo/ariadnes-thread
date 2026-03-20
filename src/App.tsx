@@ -4,13 +4,15 @@ import BottomNav from './components/BottomNav'
 import DailyView from './components/DailyView'
 import SessionFlow from './components/SessionFlow'
 import SettingsView from './components/SettingsView'
+import MorningFlow from './components/MorningFlow'
+import EveningReview from './components/EveningReview'
 
 function AppContent() {
   const { view } = useNavigation()
 
-  if (view.type === 'session') {
-    return <SessionFlow />
-  }
+  if (view.type === 'session') return <SessionFlow />
+  if (view.type === 'morning') return <MorningFlow />
+  if (view.type === 'evening') return <EveningReview />
 
   return (
     <div className="min-h-screen flex flex-col">

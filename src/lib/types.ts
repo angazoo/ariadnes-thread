@@ -1,11 +1,15 @@
+export type PyramidTier = 'foundation' | 'building' | 'treat'
+
 export interface Category {
   id: string
   name: string
   emoji: string
   colorKey: string
+  tier: PyramidTier
   intentionPrompts: string[]
   debriefPrompts: string[]
   isDefault: boolean
+  archived: boolean
   sortOrder: number
 }
 
@@ -31,10 +35,25 @@ export interface AppSettings {
   defaultDigestMinutes: number
 }
 
+export interface DayPlan {
+  date: string
+  intention: string
+  categoryIds: string[]
+  createdAt: number
+}
+
+export interface EveningReflection {
+  date: string
+  reflections: Record<string, string>
+  createdAt: number
+}
+
 export type View =
   | { type: 'home' }
   | { type: 'session' }
   | { type: 'settings' }
+  | { type: 'morning' }
+  | { type: 'evening' }
 
 export type SessionPhase =
   | 'category'

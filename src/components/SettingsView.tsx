@@ -1,18 +1,22 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, getSettings, updateSettings, saveCategory, deleteCategory } from '../lib/db'
-import type { Category } from '../lib/types'
-import { getCategoryColors } from '../lib/utils'
+import type { Category, PyramidTier } from '../lib/types'
+import { getCategoryColors, getTierColors, getTierLabel } from '../lib/utils'
 import { DEFAULT_CATEGORIES } from '../lib/defaults'
 
 const COLOR_OPTIONS = [
   { key: 'forage', label: 'Sage' },
   { key: 'build', label: 'Terracotta' },
   { key: 'write', label: 'Indigo' },
+  { key: 'tend', label: 'Moss' },
   { key: 'engage', label: 'Gold' },
   { key: 'digest', label: 'Plum' },
+  { key: 'process', label: 'Teal' },
   { key: 'admin', label: 'Gray' },
 ]
+
+const TIER_OPTIONS: PyramidTier[] = ['foundation', 'building', 'treat']
 
 export default function SettingsView() {
   const categories = useLiveQuery(() =>
@@ -96,9 +100,11 @@ export default function SettingsView() {
                 name: '',
                 emoji: '📌',
                 colorKey: 'admin',
+                tier: 'building',
                 intentionPrompts: ['What are you working on?'],
                 debriefPrompts: ['How did it go?'],
                 isDefault: false,
+                archived: false,
                 sortOrder: categories.length,
               })
             }}
@@ -223,7 +229,7 @@ function CategoryEditor({
           />
 
           <label className="text-sm text-warm-muted">Color</label>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {COLOR_OPTIONS.map((opt) => {
               const colors = getCategoryColors(opt.key)
               return (
@@ -238,6 +244,27 @@ function CategoryEditor({
                   style={{ backgroundColor: colors.accent }}
                   title={opt.label}
                 />
+              )
+            })}
+          </div>
+
+          <label className="text-sm text-warm-muted">Pyramid tier</label>
+          <div className="flex gap-2">
+            {TIER_OPTIONS.map((tier) => {
+              const tc = getTierColors(tier)
+              return (
+                <button
+                  key={tier}
+                  onClick={() => setCat({ ...cat, tier })}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    cat.tier === tier
+                      ? 'ring-2 ring-warm-text/30'
+                      : 'opacity-60 hover:opacity-100'
+                  }`}
+                  style={{ backgroundColor: tc.bg, color: tc.text }}
+                >
+                  {getTierLabel(tier)}
+                </button>
               )
             })}
           </div>
