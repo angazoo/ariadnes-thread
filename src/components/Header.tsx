@@ -14,7 +14,15 @@ export default function Header() {
           Ariadne's Thread
         </h1>
         <p className="text-sm text-warm-muted mt-0.5">
-          {view.type === 'home' && formatDate(getTodayDate())}
+          {view.type === 'home' && (
+            <>
+              The Map · {formatDate(getTodayDate())}
+            </>
+          )}
+          {view.type === 'threshold' && 'The Threshold · Adventure log'}
+          {view.type === 'interstitial-journal' &&
+            'Interstitial Journal · quick capture'}
+          {view.type === 'archive' && 'Archive · timeline & stats'}
           {view.type === 'settings' && 'Settings'}
         </p>
       </button>

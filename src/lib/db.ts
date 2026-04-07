@@ -5,9 +5,19 @@ import type {
   AppSettings,
   DayPlan,
   EveningReflection,
+  AdventureLog,
   PyramidTier,
 } from './types'
 import { DEFAULT_CATEGORIES, DEFAULT_SETTINGS } from './defaults'
+
+const LEGACY_ARCHIVE_IDS = [
+  'build',
+  'write',
+  'tend',
+  'engage',
+  'process',
+  'admin',
+]
 
 class AriadneDB extends Dexie {
   categories!: Table<Category, string>
@@ -15,6 +25,7 @@ class AriadneDB extends Dexie {
   settings!: Table<AppSettings, number>
   dayPlans!: Table<DayPlan, string>
   eveningReflections!: Table<EveningReflection, string>
+  adventureLogs!: Table<AdventureLog, string>
 
   constructor() {
     super('AriadneDB')
@@ -61,6 +72,48 @@ class AriadneDB extends Dexie {
           }
         }
       })
+
+    this.version(3)
+      .stores({
+        categories: 'id, sortOrder, tier',
+        sessions: '++id, date, categoryId, startedAt',
+        settings: 'id',
+        dayPlans: 'date',
+        eveningReflections: 'date',
+      })
+      .upgrade(async (tx) => {
+        const table = tx.table('categories')
+        for (const id of LEGACY_ARCHIVE_IDS) {
+          const row = await table.get(id)
+          if (row) await table.update(id, { archived: true })
+        }
+        for (const cat of DEFAULT_CATEGORIES) {
+          const existing = (await table.get(cat.id)) as Category | undefined
+          if (!existing) {
+            await table.add(cat)
+          } else {
+            await table.put({
+              ...existing,
+              name: cat.name,
+              emoji: cat.emoji,
+              colorKey: cat.colorKey,
+              tier: cat.tier,
+              intentionPrompts: cat.intentionPrompts,
+              debriefPrompts: cat.debriefPrompts,
+              isDefault: cat.isDefault,
+            })
+          }
+        }
+      })
+
+    this.version(4).stores({
+      categories: 'id, sortOrder, tier',
+      sessions: '++id, date, categoryId, startedAt',
+      settings: 'id',
+      dayPlans: 'date',
+      eveningReflections: 'date',
+      adventureLogs: 'date',
+    })
   }
 }
 
@@ -103,4 +156,28 @@ export async function saveEveningReflection(
   reflection: EveningReflection
 ): Promise<void> {
   await db.eveningReflections.put(reflection)
+}
+
+export async function saveAdventureLog(
+  partial: Omit<AdventureLog, 'createdAt' | 'updatedAt'> &
+    Partial<Pick<AdventureLog, 'createdAt' | 'updatedAt'>>
+): Promise<void> {
+  const existing = await db.adventureLogs.get(partial.date)
+  const now = Date.now()
+  await db.adventureLogs.put({
+    ...existing,
+    ...partial,
+    date: partial.date,
+    createdAt: existing?.createdAt ?? partial.createdAt ?? now,
+    updatedAt: now,
+  })
+}
+
+/** Persist new sort order for categories (The Map tile order). */
+export async function reorderCategories(orderedIds: string[]): Promise<void> {
+  await db.transaction('rw', db.categories, async () => {
+    for (let i = 0; i < orderedIds.length; i++) {
+      await db.categories.update(orderedIds[i], { sortOrder: i })
+    }
+  })
 }

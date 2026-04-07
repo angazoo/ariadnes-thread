@@ -1,7 +1,115 @@
-import type { PyramidTier, Session, Category } from './types'
+import type {
+  PyramidTier,
+  Session,
+  Category,
+  QuickCapture,
+  AdventureLog,
+} from './types'
+
+export type QuickCaptureKind = NonNullable<QuickCapture['kind']>
+
+const QUICK_CAPTURE_ICON: Record<QuickCaptureKind, string> = {
+  feeling: '❤️',
+  thought: '🧠',
+  'nervous-system': '🦎',
+  idea: '💡',
+}
+
+const QUICK_CAPTURE_LABEL: Record<QuickCaptureKind, string> = {
+  feeling: 'feeling',
+  thought: 'thought',
+  'nervous-system': 'nervous system',
+  idea: 'idea',
+}
 
 export function getTodayDate(): string {
   return new Date().toISOString().split('T')[0]
+}
+
+/** Local calendar YYYY-MM-DD (matches typical user-facing "today"). */
+export function ymdFromDate(d: Date): string {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+export function addDaysYmd(ymd: string, delta: number): string {
+  const [y, m, d] = ymd.split('-').map(Number)
+  const dt = new Date(y, m - 1, d + delta)
+  return ymdFromDate(dt)
+}
+
+/** Monday–Sunday week (local) containing `ymd`. */
+export function weekRangeContaining(ymd: string): {
+  start: string
+  end: string
+  shortLabel: string
+} {
+  const [y, m, d] = ymd.split('-').map(Number)
+  const dt = new Date(y, m - 1, d)
+  const dow = dt.getDay()
+  const mondayOffset = dow === 0 ? -6 : 1 - dow
+  const monday = new Date(y, m - 1, d + mondayOffset)
+  const sunday = new Date(monday)
+  sunday.setDate(sunday.getDate() + 6)
+  const start = ymdFromDate(monday)
+  const end = ymdFromDate(sunday)
+  const a = new Date(start + 'T12:00:00')
+  const b = new Date(end + 'T12:00:00')
+  const shortLabel = `${a.toLocaleDateString([], { month: 'short', day: 'numeric' })} – ${b.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}`
+  return { start, end, shortLabel }
+}
+
+export function shiftWeek(ymd: string, weekDelta: number): string {
+  return addDaysYmd(ymd, weekDelta * 7)
+}
+
+export function monthRangeFor(ymd: string): {
+  start: string
+  end: string
+  label: string
+  year: number
+  month: number
+} {
+  const [y, m] = ymd.split('-').map(Number)
+  const start = `${y}-${String(m).padStart(2, '0')}-01`
+  const lastDay = new Date(y, m, 0).getDate()
+  const end = `${y}-${String(m).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
+  const label = new Date(y, m - 1, 1).toLocaleDateString([], {
+    month: 'long',
+    year: 'numeric',
+  })
+  return { start, end, label, year: y, month: m }
+}
+
+export function shiftMonth(ymd: string, monthDelta: number): string {
+  const [y, m, d] = ymd.split('-').map(Number)
+  const firstOfTarget = new Date(y, m - 1 + monthDelta, 1)
+  const y2 = firstOfTarget.getFullYear()
+  const m2 = firstOfTarget.getMonth()
+  const lastDay = new Date(y2, m2 + 1, 0).getDate()
+  const day = Math.min(d, lastDay)
+  return ymdFromDate(new Date(y2, m2, day))
+}
+
+export function isYmdInRange(
+  ymd: string,
+  start: string,
+  end: string
+): boolean {
+  return ymd >= start && ymd <= end
+}
+
+/** True if today's Adventure Log has no weather + no quick check-in text yet. */
+export function isAdventureLogSurfaceEmpty(log?: AdventureLog | null): boolean {
+  if (!log) return true
+  const wm = log.weatherMood as string | undefined
+  const hasWeather = Boolean(wm && wm.length > 0)
+  const hasQuickText = [log.howAreYou, log.onMind].some((s) =>
+    (s ?? '').trim()
+  )
+  return !hasWeather && !hasQuickText
 }
 
 export function formatTime(seconds: number): string {
@@ -44,12 +152,16 @@ const CATEGORY_COLORS: Record<
   string,
   { bg: string; text: string; accent: string }
 > = {
+  act: { bg: '#F0E8E4', text: '#7A4E3C', accent: '#C4785C' },
   forage: { bg: '#E8F0EA', text: '#5A7A62', accent: '#7C9A82' },
+  think: { bg: '#E4ECF0', text: '#4E6A7A', accent: '#6A8A9A' },
+  connect: { bg: '#F5F0E4', text: '#8A7B3C', accent: '#B89B5C' },
+  tidy: { bg: '#EEECE8', text: '#6A6560', accent: '#9A9590' },
+  digest: { bg: '#F0E8EC', text: '#7A5C6E', accent: '#9A7C8E' },
   build: { bg: '#F5EBE4', text: '#8A5E3C', accent: '#B8785C' },
   write: { bg: '#EAEAF0', text: '#5A5E7E', accent: '#7A7E9E' },
   tend: { bg: '#EAF0E4', text: '#5A7A4E', accent: '#8AAA70' },
   engage: { bg: '#F5F0E4', text: '#8A7B3C', accent: '#B89B5C' },
-  digest: { bg: '#F0E8EC', text: '#7A5C6E', accent: '#9A7C8E' },
   process: { bg: '#E4ECF0', text: '#4E6A7A', accent: '#6A8A9A' },
   admin: { bg: '#EEECEA', text: '#6A6560', accent: '#8A8580' },
 }
@@ -143,4 +255,72 @@ export function computePyramidBalance(
 
 export function getRandomItem<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)]
+}
+
+export function aggregateJournalNotes(sessions: Session[]): QuickCapture[] {
+  return sessions
+    .flatMap((s) => s.journalEntries ?? [])
+    .sort((a, b) => a.at - b.at)
+}
+
+export function aggregateParkingNotes(sessions: Session[]): QuickCapture[] {
+  return sessions
+    .flatMap((s) => s.parkingEntries ?? [])
+    .sort((a, b) => a.at - b.at)
+}
+
+export function quickCaptureIcon(kind?: QuickCapture['kind']): string {
+  return QUICK_CAPTURE_ICON[kind ?? 'thought']
+}
+
+export function quickCaptureLabel(kind?: QuickCapture['kind']): string {
+  return QUICK_CAPTURE_LABEL[kind ?? 'thought']
+}
+
+export interface EmotionalHighlight {
+  session: Session
+  category?: Category
+  label: string
+  atmosphere: number
+}
+
+/** Sessions with highest pre-session emotional atmosphere (resistance). */
+export function highestResistanceSessions(
+  sessions: Session[],
+  categoryMap: Record<string, Category>,
+  take = 2
+): EmotionalHighlight[] {
+  return sessions
+    .filter((s) => s.circleBefore != null)
+    .map((s) => ({
+      session: s,
+      category: categoryMap[s.categoryId],
+      atmosphere: s.circleBefore!.atmosphere,
+    }))
+    .sort((a, b) => b.atmosphere - a.atmosphere)
+    .slice(0, take)
+    .map((x) => ({
+      ...x,
+      label: 'Felt heavy going in',
+    }))
+}
+
+export function lowestResistanceSessions(
+  sessions: Session[],
+  categoryMap: Record<string, Category>,
+  take = 2
+): EmotionalHighlight[] {
+  return sessions
+    .filter((s) => s.circleBefore != null)
+    .map((s) => ({
+      session: s,
+      category: categoryMap[s.categoryId],
+      atmosphere: s.circleBefore!.atmosphere,
+    }))
+    .sort((a, b) => a.atmosphere - b.atmosphere)
+    .slice(0, take)
+    .map((x) => ({
+      ...x,
+      label: 'Felt light going in',
+    }))
 }

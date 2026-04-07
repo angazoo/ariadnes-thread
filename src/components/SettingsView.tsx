@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, getSettings, updateSettings, saveCategory, deleteCategory } from '../lib/db'
 import type { Category, PyramidTier } from '../lib/types'
@@ -6,17 +6,42 @@ import { getCategoryColors, getTierColors, getTierLabel } from '../lib/utils'
 import { DEFAULT_CATEGORIES } from '../lib/defaults'
 
 const COLOR_OPTIONS = [
+  { key: 'act', label: 'Clay' },
   { key: 'forage', label: 'Sage' },
+  { key: 'think', label: 'Teal' },
+  { key: 'connect', label: 'Gold' },
+  { key: 'tidy', label: 'Stone' },
+  { key: 'digest', label: 'Plum' },
   { key: 'build', label: 'Terracotta' },
   { key: 'write', label: 'Indigo' },
   { key: 'tend', label: 'Moss' },
-  { key: 'engage', label: 'Gold' },
-  { key: 'digest', label: 'Plum' },
-  { key: 'process', label: 'Teal' },
+  { key: 'engage', label: 'Amber' },
+  { key: 'process', label: 'Slate' },
   { key: 'admin', label: 'Gray' },
 ]
 
 const TIER_OPTIONS: PyramidTier[] = ['foundation', 'building', 'treat']
+
+const EMOJI_QUICK_PICK = [
+  '🎯',
+  '🌿',
+  '🧠',
+  '💬',
+  '🧹',
+  '🫖',
+  '✏️',
+  '📋',
+  '🎨',
+  '🏃',
+  '💡',
+  '🔧',
+  '📚',
+  '🎭',
+  '🌱',
+  '⚡',
+  '🧘',
+  '🎵',
+]
 
 export default function SettingsView() {
   const categories = useLiveQuery(() =>
@@ -88,6 +113,13 @@ export default function SettingsView() {
       </section>
 
       <section>
+        <p className="text-xs text-warm-muted mb-3 leading-relaxed">
+          Saved categories appear on the <strong className="font-medium text-warm-text">Map</strong>{' '}
+          automatically. Reorder tiles there by dragging the{' '}
+          <span className="font-mono text-[10px]">⋮⋮</span> handle (Tiles view). Use{' '}
+          <strong className="font-medium text-warm-text">Hide from Map</strong> below to remove
+          one without deleting it.
+        </p>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-medium text-warm-muted uppercase tracking-wide">
             Categories
@@ -99,7 +131,7 @@ export default function SettingsView() {
                 id: crypto.randomUUID().slice(0, 8),
                 name: '',
                 emoji: '📌',
-                colorKey: 'admin',
+                colorKey: 'act',
                 tier: 'building',
                 intentionPrompts: ['What are you working on?'],
                 debriefPrompts: ['How did it go?'],
@@ -120,19 +152,28 @@ export default function SettingsView() {
             return (
               <div
                 key={cat.id}
-                className="card flex items-center gap-3 cursor-pointer hover:border-warm-muted/30"
+                className={`card flex items-center gap-3 cursor-pointer hover:border-warm-muted/30 ${
+                  cat.archived ? 'opacity-60' : ''
+                }`}
                 onClick={() => {
                   setEditingCategory(cat)
                   setIsNewCategory(false)
                 }}
               >
                 <div
-                  className="w-9 h-9 rounded-lg flex items-center justify-center"
+                  className="w-9 h-9 rounded-lg flex items-center justify-center text-lg"
                   style={{ backgroundColor: colors.bg }}
                 >
                   {cat.emoji}
                 </div>
-                <span className="text-sm font-medium flex-1">{cat.name}</span>
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-medium block truncate">{cat.name}</span>
+                  {cat.archived && (
+                    <span className="text-[10px] text-warm-light uppercase tracking-wide">
+                      Hidden from Map
+                    </span>
+                  )}
+                </div>
                 <svg
                   width="16"
                   height="16"
@@ -154,6 +195,7 @@ export default function SettingsView() {
 
       {editingCategory && (
         <CategoryEditor
+          key={editingCategory.id}
           category={editingCategory}
           isNew={isNewCategory}
           onSave={async (cat) => {
@@ -199,6 +241,10 @@ function CategoryEditor({
 }) {
   const [cat, setCat] = useState(category)
 
+  useEffect(() => {
+    setCat(category)
+  }, [category])
+
   return (
     <div className="fixed inset-0 bg-warm-text/30 flex items-end sm:items-center justify-center z-50">
       <div className="bg-cream rounded-t-2xl sm:rounded-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto p-5 space-y-4">
@@ -211,16 +257,41 @@ function CategoryEditor({
           </button>
         </div>
 
-        <div className="grid grid-cols-[auto_1fr] gap-3 items-center">
-          <label className="text-sm text-warm-muted">Emoji</label>
+        <div>
+          <label className="text-sm text-warm-muted block mb-2">Emoji</label>
+          <p className="text-[11px] text-warm-light mb-2">
+            Tap one below, or paste / type in the box (works with your emoji keyboard).
+          </p>
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            {EMOJI_QUICK_PICK.map((e) => (
+              <button
+                key={e}
+                type="button"
+                onClick={() => setCat({ ...cat, emoji: e })}
+                className={`w-10 h-10 rounded-xl text-lg flex items-center justify-center border transition-all
+                  ${
+                    cat.emoji === e
+                      ? 'border-warm-text bg-warm-white shadow-sm'
+                      : 'border-warm-border/60 bg-warm-white/70 hover:border-warm-muted'
+                  }`}
+              >
+                {e}
+              </button>
+            ))}
+          </div>
           <input
             value={cat.emoji}
             onChange={(e) => setCat({ ...cat, emoji: e.target.value })}
-            className="bg-warm-white rounded-lg px-3 py-2 text-center w-16 focus:outline-none"
-            maxLength={4}
+            className="w-full max-w-[200px] bg-warm-white rounded-lg px-3 py-2.5 text-2xl text-center focus:outline-none focus:ring-2 focus:ring-warm-border"
+            maxLength={16}
+            placeholder="📌"
+            aria-label="Category emoji"
           />
+        </div>
 
-          <label className="text-sm text-warm-muted">Name</label>
+        <div className="grid grid-cols-[auto_1fr] gap-3 items-center">
+
+          <label className="text-sm text-warm-muted self-start pt-2">Name</label>
           <input
             value={cat.name}
             onChange={(e) => setCat({ ...cat, name: e.target.value })}
@@ -268,6 +339,19 @@ function CategoryEditor({
               )
             })}
           </div>
+
+          <label className="text-sm text-warm-muted self-start pt-1">Map</label>
+          <label className="flex items-center gap-2 cursor-pointer text-sm text-warm-text">
+            <input
+              type="checkbox"
+              checked={!cat.archived}
+              onChange={(e) =>
+                setCat({ ...cat, archived: !e.target.checked })
+              }
+              className="rounded border-warm-border w-4 h-4 accent-warm-text shrink-0"
+            />
+            Show on Map (uncheck to hide without deleting)
+          </label>
         </div>
 
         <div>

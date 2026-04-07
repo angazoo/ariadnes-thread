@@ -2,7 +2,12 @@ import { useState, useCallback } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, saveEveningReflection } from '../lib/db'
 import { useNavigation } from '../lib/store'
-import { getTodayDate } from '../lib/utils'
+import {
+  getTodayDate,
+  aggregateJournalNotes,
+  highestResistanceSessions,
+  lowestResistanceSessions,
+} from '../lib/utils'
 import { EVENING_PROMPTS } from '../lib/defaults'
 import BentoSummary from './BentoSummary'
 import PyramidView from './PyramidView'
@@ -54,6 +59,9 @@ export default function EveningReview() {
   }
 
   const categoryMap = Object.fromEntries(categories.map((c) => [c.id, c]))
+  const journalPile = aggregateJournalNotes(sessions)
+  const heavy = highestResistanceSessions(sessions, categoryMap, 2)
+  const light = lowestResistanceSessions(sessions, categoryMap, 2)
 
   return (
     <div className="min-h-screen bg-cream">
@@ -81,6 +89,72 @@ export default function EveningReview() {
             <BentoSummary sessions={sessions} categoryMap={categoryMap} />
             <PyramidView sessions={sessions} categoryMap={categoryMap} />
           </div>
+
+          {(heavy.length > 0 || light.length > 0) && (
+            <div className="card space-y-3 mb-6">
+              <p className="text-xs font-medium text-warm-muted uppercase tracking-wide">
+                Unflattened (going in)
+              </p>
+              {heavy.length > 0 && (
+                <div>
+                  <p className="text-[11px] text-warm-light mb-1">Heaviest</p>
+                  <ul className="text-sm space-y-1">
+                    {heavy.map((h) => (
+                      <li
+                        key={
+                          h.session.id ??
+                          `${h.session.startedAt}-${h.session.categoryId}`
+                        }
+                      >
+                        {h.category?.emoji}{' '}
+                        {h.category?.name ?? 'Session'} — emotional weight{' '}
+                        {h.atmosphere}%
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {light.length > 0 && (
+                <div>
+                  <p className="text-[11px] text-warm-light mb-1">Lightest</p>
+                  <ul className="text-sm space-y-1">
+                    {light.map((h) => (
+                      <li
+                        key={
+                          h.session.id ??
+                          `${h.session.startedAt}-${h.session.categoryId}`
+                        }
+                      >
+                        {h.category?.emoji}{' '}
+                        {h.category?.name ?? 'Session'} — {h.atmosphere}%
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
+          {journalPile.length > 0 && (
+            <div className="card mb-6 max-h-56 overflow-y-auto">
+              <p className="text-xs font-medium text-warm-muted uppercase tracking-wide mb-2">
+                Daily notes pile
+              </p>
+              <ul className="text-sm space-y-2 text-warm-text">
+                {journalPile.map((n) => (
+                  <li key={n.id} className="leading-snug">
+                    <span className="text-[10px] text-warm-light">
+                      {new Date(n.at).toLocaleTimeString([], {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                      })}
+                    </span>{' '}
+                    {n.text}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <button
             onClick={() =>

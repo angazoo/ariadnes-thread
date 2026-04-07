@@ -38,12 +38,21 @@ export default function SessionCard({ session, category }: Props) {
           </p>
         )}
 
-        <div className="flex gap-3 mt-1.5 text-xs text-warm-light">
+        <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1.5 text-xs text-warm-light">
           <span>{formatDuration(totalDuration)}</span>
           {!session.digestSkipped && session.digestDurationActual > 0 && (
             <span>
               + {formatDuration(session.digestDurationActual)} digest
             </span>
+          )}
+          {(session.journalEntries?.length ?? 0) > 0 && (
+            <span>📝 {session.journalEntries!.length}</span>
+          )}
+          {(session.parkingEntries?.length ?? 0) > 0 && (
+            <span>🅿️ {session.parkingEntries!.length}</span>
+          )}
+          {session.circleBefore && session.circleBefore.atmosphere > 60 && (
+            <span>weight {session.circleBefore.atmosphere}%</span>
           )}
         </div>
       </div>

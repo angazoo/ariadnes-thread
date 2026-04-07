@@ -9,10 +9,11 @@
 
   body {
     @apply bg-cream text-warm-text font-sans antialiased;
+    background-color: #f4f1eb;
   }
 
   ::selection {
-    background: rgba(124, 154, 130, 0.2);
+    background: rgba(163, 148, 132, 0.25);
   }
 }
 
@@ -20,16 +21,20 @@
   .btn-primary {
     @apply px-6 py-3 rounded-2xl font-medium transition-all duration-200
       bg-warm-text text-cream hover:bg-warm-text/90 active:scale-[0.98];
+    box-shadow: 0 1px 0 rgba(43, 38, 32, 0.12);
   }
 
   .btn-ghost {
     @apply px-4 py-2 rounded-xl font-medium transition-all duration-200
       text-warm-muted hover:text-warm-text hover:bg-warm-white active:scale-[0.98];
+    color: #7d736a;
   }
 
   .card {
     @apply bg-white rounded-2xl border border-warm-border p-4
       transition-all duration-200;
+    background-color: #f7f3ec;
+    border-color: #ded6cb;
   }
 }
 

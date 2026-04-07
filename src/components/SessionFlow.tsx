@@ -1,123 +1,201 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, saveSession, getSettings } from '../lib/db'
 import { useNavigation } from '../lib/store'
-import type { Category, Session, SessionPhase } from '../lib/types'
-import { getTodayDate } from '../lib/utils'
-import type { DayPlan } from '../lib/types'
+import type {
+  Category,
+  Session,
+  SessionPhase,
+  QuickCapture,
+  TaskUnpacking,
+  UnflattenedCircle,
+} from '../lib/types'
+import { getTodayDate, type QuickCaptureKind } from '../lib/utils'
 import CategoryPicker from './CategoryPicker'
-import IntentionStep from './IntentionStep'
-import DurationPicker from './DurationPicker'
-import TimerDisplay from './TimerDisplay'
-import DebriefStep from './DebriefStep'
+import PreSessionPrep from './PreSessionPrep'
+import WorkTimerPanel from './WorkTimerPanel'
+import PostSessionPage from './PostSessionPage'
 
-interface SessionState {
-  category: Category | null
-  intention: string
-  workMinutes: number
-  digestMinutes: number
-  workActualSeconds: number
-  digestActualSeconds: number
-  digestSkipped: boolean
-  startedAt: number
+function captureId() {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
 }
 
 export default function SessionFlow() {
-  const { navigate } = useNavigation()
+  const { view, navigate } = useNavigation()
   const categories = useLiveQuery(() =>
     db.categories.orderBy('sortOrder').toArray()
   )
   const settings = useLiveQuery(() => getSettings())
-  const dayPlan = useLiveQuery(
-    () => db.dayPlans.get(getTodayDate()) as Promise<DayPlan | undefined>,
-    []
-  )
 
-  const [phase, setPhase] = useState<SessionPhase>('category')
-  const [state, setState] = useState<SessionState>({
-    category: null,
-    intention: '',
-    workMinutes: 45,
-    digestMinutes: 10,
-    workActualSeconds: 0,
-    digestActualSeconds: 0,
-    digestSkipped: false,
-    startedAt: 0,
-  })
+  const sessionCategoryId = view.type === 'session' ? view.categoryId : undefined
+  const [pickedCategory, setPickedCategory] = useState<Category | null>(null)
 
-  const handleCategorySelect = useCallback((cat: Category) => {
-    setState((s) => ({ ...s, category: cat }))
-    setPhase('intention')
-  }, [])
+  const category = useMemo(() => {
+    if (!categories?.length) return null
+    if (sessionCategoryId) {
+      const c = categories.find(
+        (x) => x.id === sessionCategoryId && !x.archived
+      )
+      return c ?? null
+    }
+    return pickedCategory
+  }, [categories, sessionCategoryId, pickedCategory])
 
-  const handleIntentionSubmit = useCallback(
-    (intention: string) => {
-      setState((s) => ({
-        ...s,
-        intention,
-        workMinutes: settings?.defaultWorkMinutes ?? 45,
-        digestMinutes: settings?.defaultDigestMinutes ?? 10,
-      }))
-      setPhase('duration')
-    },
-    [settings]
-  )
+  useEffect(() => {
+    if (sessionCategoryId) setPickedCategory(null)
+  }, [sessionCategoryId])
 
-  const handleDurationSubmit = useCallback(
-    (workMinutes: number, digestMinutes: number) => {
-      setState((s) => ({
-        ...s,
-        workMinutes,
-        digestMinutes,
-        startedAt: Date.now(),
-      }))
+  const [phase, setPhase] = useState<SessionPhase>('prep')
+  const [intention, setIntention] = useState('')
+  const [unpacking, setUnpacking] = useState<TaskUnpacking>({})
+  const [circleBefore, setCircleBefore] = useState<
+    UnflattenedCircle | undefined
+  >()
+  const [workMinutes, setWorkMinutes] = useState(45)
+  const [workActualSeconds, setWorkActualSeconds] = useState(0)
+  const [startedAt, setStartedAt] = useState(0)
+  const [journalEntries, setJournalEntries] = useState<QuickCapture[]>([])
+  const [parkingEntries, setParkingEntries] = useState<QuickCapture[]>([])
+
+  const resetFlow = useCallback(() => {
+    setPhase('prep')
+    setIntention('')
+    setUnpacking({})
+    setCircleBefore(undefined)
+    setWorkMinutes(settings?.defaultWorkMinutes ?? 45)
+    setWorkActualSeconds(0)
+    setStartedAt(0)
+    setJournalEntries([])
+    setParkingEntries([])
+    setPickedCategory(null)
+  }, [settings?.defaultWorkMinutes])
+
+  const goHome = useCallback(() => {
+    resetFlow()
+    navigate({ type: 'home' })
+  }, [navigate, resetFlow])
+
+  const handlePrepContinue = useCallback(
+    (data: {
+      intention: string
+      unpacking: TaskUnpacking
+      circleBefore: UnflattenedCircle
+      workMinutes: number
+    }) => {
+      setIntention(data.intention)
+      setUnpacking(data.unpacking)
+      setCircleBefore(data.circleBefore)
+      setWorkMinutes(data.workMinutes)
+      setStartedAt(Date.now())
       setPhase('timer-work')
     },
     []
   )
 
-  const handleWorkComplete = useCallback((actualSeconds: number) => {
-    setState((s) => ({ ...s, workActualSeconds: actualSeconds }))
-    setPhase('timer-digest-prompt')
+  const addJournal = useCallback((text: string, kind?: QuickCaptureKind) => {
+    setJournalEntries((list) => [
+      ...list,
+      { id: captureId(), text, at: Date.now(), kind: kind ?? 'thought' },
+    ])
   }, [])
 
-  const handleDigestStart = useCallback(() => {
-    setPhase('timer-digest')
+  const addParking = useCallback((text: string) => {
+    setParkingEntries((list) => [
+      ...list,
+      { id: captureId(), text, at: Date.now() },
+    ])
   }, [])
 
-  const handleDigestSkip = useCallback(() => {
-    setState((s) => ({ ...s, digestSkipped: true, digestActualSeconds: 0 }))
-    setPhase('debrief')
-  }, [])
-
-  const handleDigestComplete = useCallback((actualSeconds: number) => {
-    setState((s) => ({ ...s, digestActualSeconds: actualSeconds }))
-    setPhase('debrief')
-  }, [])
-
-  const handleDebriefSubmit = useCallback(
-    async (reflections: Record<string, string>) => {
-      const session: Session = {
-        date: getTodayDate(),
-        categoryId: state.category!.id,
-        intention: state.intention,
-        workDurationPlanned: state.workMinutes * 60,
-        workDurationActual: state.workActualSeconds,
-        digestDurationPlanned: state.digestMinutes * 60,
-        digestDurationActual: state.digestActualSeconds,
-        digestSkipped: state.digestSkipped,
-        reflections,
-        startedAt: state.startedAt,
-        endedAt: Date.now(),
-        status: 'completed',
-      }
-      await saveSession(session)
-      navigate({ type: 'home' })
+  const updateJournalEntry = useCallback(
+    (id: string, patch: Partial<Pick<QuickCapture, 'text' | 'kind' | 'bucket'>>) => {
+      setJournalEntries((list) =>
+        list.map((item) => (item.id === id ? { ...item, ...patch } : item))
+      )
     },
-    [state, navigate]
+    []
   )
 
-  const goHome = useCallback(() => navigate({ type: 'home' }), [navigate])
+  const moveJournalToParking = useCallback((id: string) => {
+    setJournalEntries((list) => {
+      const item = list.find((x) => x.id === id)
+      if (!item) return list
+      setParkingEntries((parking) => [
+        ...parking,
+        { id: item.id, text: item.text, at: item.at },
+      ])
+      return list.filter((x) => x.id !== id)
+    })
+  }, [])
+
+  const moveParkingToJournal = useCallback(
+    (id: string, kind: QuickCaptureKind = 'thought', bucket?: string) => {
+      setParkingEntries((list) => {
+        const item = list.find((x) => x.id === id)
+        if (!item) return list
+        setJournalEntries((journal) => [
+          ...journal,
+          { id: item.id, text: item.text, at: item.at, kind, bucket },
+        ])
+        return list.filter((x) => x.id !== id)
+      })
+    },
+    []
+  )
+
+  const handleWorkComplete = useCallback((actualSeconds: number) => {
+    setWorkActualSeconds(actualSeconds)
+    setPhase('post')
+  }, [])
+
+  const handlePostSave = useCallback(
+    async (post: {
+      digestDurationPlanned: number
+      digestDurationActual: number
+      digestSkipped: boolean
+      circleAfter?: UnflattenedCircle
+      reflections: Record<string, string>
+    }) => {
+      if (!category) return
+      const session: Session = {
+        date: getTodayDate(),
+        categoryId: category.id,
+        intention,
+        workDurationPlanned: workMinutes * 60,
+        workDurationActual: workActualSeconds,
+        digestDurationPlanned: post.digestDurationPlanned,
+        digestDurationActual: post.digestDurationActual,
+        digestSkipped: post.digestSkipped,
+        reflections: post.reflections,
+        startedAt,
+        endedAt: Date.now(),
+        status: 'completed',
+        unpacking:
+          unpacking && Object.values(unpacking).some((v) => v?.trim())
+            ? unpacking
+            : undefined,
+        circleBefore,
+        circleAfter: post.circleAfter,
+        journalEntries,
+        parkingEntries,
+      }
+      await saveSession(session)
+      resetFlow()
+      navigate({ type: 'home' })
+    },
+    [
+      category,
+      intention,
+      workMinutes,
+      workActualSeconds,
+      startedAt,
+      unpacking,
+      circleBefore,
+      journalEntries,
+      parkingEntries,
+      navigate,
+      resetFlow,
+    ]
+  )
 
   if (!categories || !settings) {
     return (
@@ -127,81 +205,52 @@ export default function SessionFlow() {
     )
   }
 
+  if (!category) {
+    return (
+      <CategoryPicker
+        categories={categories}
+        onSelect={(c) => setPickedCategory(c)}
+        onCancel={goHome}
+      />
+    )
+  }
+
   return (
     <div className="min-h-screen bg-cream">
-      {phase === 'category' && (
-        <CategoryPicker
-          categories={categories}
-          onSelect={handleCategorySelect}
-          onCancel={goHome}
-          plannedIds={dayPlan?.categoryIds}
+      {phase === 'prep' && (
+        <PreSessionPrep
+          category={category}
+          defaultWorkMinutes={settings.defaultWorkMinutes}
+          onBack={goHome}
+          onContinue={handlePrepContinue}
         />
       )}
 
-      {phase === 'intention' && state.category && (
-        <IntentionStep
-          category={state.category}
-          onSubmit={handleIntentionSubmit}
-          onBack={() => setPhase('category')}
-        />
-      )}
-
-      {phase === 'duration' && (
-        <DurationPicker
-          workMinutes={state.workMinutes}
-          digestMinutes={state.digestMinutes}
-          onSubmit={handleDurationSubmit}
-          onBack={() => setPhase('intention')}
-        />
-      )}
-
-      {phase === 'timer-work' && state.category && (
-        <TimerDisplay
-          durationSeconds={state.workMinutes * 60}
-          phase="work"
-          category={state.category}
-          intention={state.intention}
+      {phase === 'timer-work' && (
+        <WorkTimerPanel
+          durationSeconds={workMinutes * 60}
+          category={category}
+          intention={intention}
+          journalEntries={journalEntries}
+          parkingEntries={parkingEntries}
+          onJournalAdd={addJournal}
+          onParkingAdd={addParking}
+          onJournalUpdate={updateJournalEntry}
+          onJournalMoveToParking={moveJournalToParking}
+          onParkingMoveToJournal={moveParkingToJournal}
           onComplete={handleWorkComplete}
           onCancel={goHome}
         />
       )}
 
-      {phase === 'timer-digest-prompt' && state.category && (
-        <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center animate-fadeIn">
-          <div className="text-4xl mb-4">🫖</div>
-          <h2 className="font-serif text-2xl text-warm-text mb-2">
-            Time to digest
-          </h2>
-          <p className="text-warm-muted text-sm max-w-xs mb-8">
-            Take {state.digestMinutes} minutes to save what matters, close what
-            doesn't, and clear your workspace.
-          </p>
-          <div className="space-y-3 w-full max-w-xs">
-            <button onClick={handleDigestStart} className="btn-primary w-full">
-              Start digest ({state.digestMinutes}m)
-            </button>
-            <button onClick={handleDigestSkip} className="btn-ghost w-full">
-              Skip, go to debrief
-            </button>
-          </div>
-        </div>
-      )}
-
-      {phase === 'timer-digest' && state.category && (
-        <TimerDisplay
-          durationSeconds={state.digestMinutes * 60}
-          phase="digest"
-          category={state.category}
-          intention="Save what matters. Close what doesn't."
-          onComplete={handleDigestComplete}
-          onCancel={() => handleDigestComplete(0)}
-        />
-      )}
-
-      {phase === 'debrief' && state.category && (
-        <DebriefStep
-          category={state.category}
-          onSubmit={handleDebriefSubmit}
+      {phase === 'post' && (
+        <PostSessionPage
+          category={category}
+          journalEntries={journalEntries}
+          parkingEntries={parkingEntries}
+          circleBefore={circleBefore}
+          onSave={handlePostSave}
+          onCancel={goHome}
         />
       )}
     </div>
