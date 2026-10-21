@@ -152,18 +152,18 @@ const CATEGORY_COLORS: Record<
   string,
   { bg: string; text: string; accent: string }
 > = {
-  act: { bg: '#F0E8E4', text: '#7A4E3C', accent: '#C4785C' },
-  forage: { bg: '#E8F0EA', text: '#5A7A62', accent: '#7C9A82' },
-  think: { bg: '#E4ECF0', text: '#4E6A7A', accent: '#6A8A9A' },
-  connect: { bg: '#F5F0E4', text: '#8A7B3C', accent: '#B89B5C' },
-  tidy: { bg: '#EEECE8', text: '#6A6560', accent: '#9A9590' },
-  digest: { bg: '#F0E8EC', text: '#7A5C6E', accent: '#9A7C8E' },
-  build: { bg: '#F5EBE4', text: '#8A5E3C', accent: '#B8785C' },
-  write: { bg: '#EAEAF0', text: '#5A5E7E', accent: '#7A7E9E' },
-  tend: { bg: '#EAF0E4', text: '#5A7A4E', accent: '#8AAA70' },
-  engage: { bg: '#F5F0E4', text: '#8A7B3C', accent: '#B89B5C' },
-  process: { bg: '#E4ECF0', text: '#4E6A7A', accent: '#6A8A9A' },
-  admin: { bg: '#EEECEA', text: '#6A6560', accent: '#8A8580' },
+  act: { bg: '#EFE6E1', text: '#6B3F32', accent: '#A86B55' },
+  forage: { bg: '#E4EDE6', text: '#3F5F48', accent: '#6A8B72' },
+  think: { bg: '#E2E8EC', text: '#3D5563', accent: '#5F7D8C' },
+  connect: { bg: '#EDE8DC', text: '#6A5F35', accent: '#9A8A55' },
+  tidy: { bg: '#EAE8E4', text: '#56524E', accent: '#84807A' },
+  digest: { bg: '#EBE4E8', text: '#5E4554', accent: '#8A6B7A' },
+  build: { bg: '#EDE5DE', text: '#6B4630', accent: '#A06A4E' },
+  write: { bg: '#E5E5EC', text: '#474B66', accent: '#6C7090' },
+  tend: { bg: '#E5ECDF', text: '#45603C', accent: '#759868' },
+  engage: { bg: '#EDE8DC', text: '#6A5F35', accent: '#9A8A55' },
+  process: { bg: '#E2E8EC', text: '#3D5563', accent: '#5F7D8C' },
+  admin: { bg: '#E9E7E4', text: '#55514D', accent: '#7A7570' },
 }
 
 export function getCategoryColors(colorKey: string) {

@@ -116,10 +116,14 @@ export default function ThresholdView() {
 
   return (
     <div className="space-y-5 pt-2 pb-32 animate-fadeIn max-w-lg mx-auto">
-      <div className="text-center space-y-1">
-        <p className="text-2xl">🚪</p>
-        <h2 className="font-serif text-xl text-warm-text">The Threshold</h2>
-        <p className="text-sm text-warm-muted px-2">
+      <div className="text-center space-y-2">
+        <div className="mx-auto w-10 h-10 rounded-full border border-thread/20 flex items-center justify-center">
+          <span className="thread-mark animate-thread-pulse" />
+        </div>
+        <h2 className="font-serif text-[1.65rem] tracking-tight text-ink">
+          The Threshold
+        </h2>
+        <p className="text-sm text-warm-muted px-2 leading-relaxed">
           A pause before the labyrinth — as quick or as deep as you need.
         </p>
       </div>

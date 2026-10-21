@@ -47,8 +47,8 @@ export default function QuickCaptureColumn({
 
   const shell =
     variant === 'journal'
-      ? 'bg-[#F6F1E8] border-stone-200/90 w-full max-w-3xl'
-      : 'bg-[#F2EDE6] border-stone-300/50'
+      ? 'bg-warm-white/80 border-warm-border/80 w-full max-w-3xl shadow-soft'
+      : 'bg-warm-white/60 border-warm-border/70'
 
   const quickActions: {
     kind: QuickCaptureKind | 'parking'
@@ -76,10 +76,10 @@ export default function QuickCaptureColumn({
               key={action.kind}
               type="button"
               onClick={() => setActiveKind(action.kind)}
-              className={`w-8 h-8 rounded-lg active:scale-95 border flex items-center justify-center text-sm ${
+              className={`w-8 h-8 rounded-lg active:scale-95 border flex items-center justify-center text-sm transition-all ${
                 activeKind === action.kind
-                  ? 'bg-white border-stone-400 shadow-sm'
-                  : 'bg-white/60 hover:bg-white/90 border-amber-200/70'
+                  ? 'bg-cream border-thread/40 shadow-sm scale-105'
+                  : 'bg-cream/50 hover:bg-cream border-warm-border'
               }`}
               aria-label={action.label}
               title={action.label}

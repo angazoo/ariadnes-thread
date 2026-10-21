@@ -95,78 +95,65 @@ export default function DailyView() {
   const hasSessions = sessions.length > 0
 
   return (
-    <div className="space-y-5 pt-2 animate-fadeIn pb-28">
-      {isAdventureLogSurfaceEmpty(adventureLog) && (
+    <div className="space-y-6 pt-1 animate-fadeIn pb-28">
+      <div className="grid grid-cols-2 gap-2">
+        {isAdventureLogSurfaceEmpty(adventureLog) ? (
+          <button
+            type="button"
+            onClick={() => navigate({ type: 'threshold' })}
+            className="surface-quiet text-left p-3.5 col-span-2 hover:bg-warm-white/80 transition-all duration-200 group"
+          >
+            <p className="section-label mb-1.5">Begin</p>
+            <p className="text-sm font-medium text-ink">Pause at the threshold</p>
+            <p className="text-xs text-warm-muted mt-1 leading-relaxed">
+              Weather check &amp; brain dump — or skip if you&apos;re already clear.
+            </p>
+          </button>
+        ) : null}
+
         <button
           type="button"
-          onClick={() => navigate({ type: 'threshold' })}
-          className="card w-full text-left border-dashed border-warm-muted/25 hover:border-warm-muted/40 transition-colors"
+          onClick={() => navigate({ type: 'interstitial-journal' })}
+          className={`surface-quiet text-left p-3.5 hover:bg-warm-white/80 transition-all duration-200 ${
+            isAdventureLogSurfaceEmpty(adventureLog) ? '' : 'col-span-2'
+          }`}
         >
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">🚪</span>
-            <div>
-              <p className="text-sm font-medium text-warm-text">
-                Pause at the threshold
-              </p>
-              <p className="text-xs text-warm-muted mt-0.5">
-                Quick weather check &amp; brain dump before you zoom in — or
-                skip if you&apos;re already clear.
-              </p>
-            </div>
-          </div>
+          <p className="section-label mb-1.5">Capture</p>
+          <p className="text-sm font-medium text-ink">Interstitial Journal</p>
+          <p className="text-xs text-warm-muted mt-1">Quick notes, no task type.</p>
         </button>
-      )}
-
-      <button
-        type="button"
-        onClick={() => navigate({ type: 'interstitial-journal' })}
-        className="card w-full text-left border-stone-300/70 bg-[#F5F1EA] hover:border-stone-400/60 transition-colors"
-      >
-        <div className="flex items-center gap-3">
-          <span className="text-2xl">📝</span>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-warm-text">
-              Interstitial Journal
-            </p>
-            <p className="text-xs text-warm-muted mt-0.5">
-              Go straight into quick captures without choosing a task type.
-            </p>
-          </div>
-          <span className="text-warm-light">→</span>
-        </div>
-      </button>
+      </div>
 
       <div>
-        <p className="text-[10px] uppercase tracking-wide text-warm-muted font-medium mb-2">
-          Today&apos;s intention
-        </p>
+        <p className="section-label mb-2">Today&apos;s intention</p>
         <VoiceTextArea
           value={intentionDraft}
           onChange={setIntentionDraft}
           placeholder="What would make today wholesome…"
-          className="w-full bg-warm-white rounded-2xl p-4 pr-14 text-warm-text
+          className="w-full bg-warm-white/80 rounded-2xl p-4 pr-14 text-warm-text
                      placeholder:text-warm-light resize-none focus:outline-none
-                     focus:ring-2 focus:ring-warm-border min-h-[72px] text-base"
+                     focus:ring-2 focus:ring-thread/20 border border-warm-border/70
+                     min-h-[76px] text-[15px] leading-relaxed"
         />
-        <p className="text-[11px] text-warm-light mt-1.5">
-          Tap the circle on a tile to mark 2–3 modes you intend to touch.
+        <p className="text-[11px] text-warm-light mt-2">
+          Mark 2–3 modes on the map you intend to touch.
         </p>
       </div>
 
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-end justify-between gap-2">
         <div>
-          <span className="text-xs text-warm-muted block">The Map</span>
-          <span className="text-[10px] text-warm-light leading-tight block mt-0.5 max-w-[200px]">
-            Tiles: drag <span className="font-mono">⋮⋮</span> to reorder · tap tile to work
-          </span>
+          <p className="font-serif text-xl text-ink tracking-tight">The Map</p>
+          <p className="text-[11px] text-warm-light mt-0.5">
+            Drag to reorder · tap a tile to work
+          </p>
         </div>
-        <div className="flex rounded-full bg-warm-white p-0.5 border border-warm-border">
+        <div className="flex rounded-full bg-warm-white/80 p-0.5 border border-warm-border/80">
           <button
             type="button"
             onClick={() => setMapMode('grid')}
-            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+            className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
               mapMode === 'grid'
-                ? 'bg-warm-text text-cream'
+                ? 'bg-ink text-cream shadow-sm'
                 : 'text-warm-muted'
             }`}
           >
@@ -175,9 +162,9 @@ export default function DailyView() {
           <button
             type="button"
             onClick={() => setMapMode('pyramid')}
-            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+            className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
               mapMode === 'pyramid'
-                ? 'bg-warm-text text-cream'
+                ? 'bg-ink text-cream shadow-sm'
                 : 'text-warm-muted'
             }`}
           >
@@ -204,7 +191,7 @@ export default function DailyView() {
             return (
               <span
                 key={id}
-                className="text-[11px] px-2 py-0.5 rounded-full font-medium"
+                className="text-[11px] px-2.5 py-1 rounded-full font-medium border border-black/5"
                 style={{ backgroundColor: colors.bg, color: colors.text }}
               >
                 {cat.emoji} {cat.name}
@@ -222,20 +209,19 @@ export default function DailyView() {
       )}
 
       {!hasSessions && (
-        <div className="text-center py-6">
-          <div className="text-4xl mb-2">🧶</div>
-          <p className="text-sm text-warm-muted max-w-xs mx-auto">
-            Tap a tile to enter the Territory — timer, journal, and parking
-            lot.
+        <div className="text-center py-8">
+          <div className="mx-auto mb-3 w-10 h-10 rounded-full border border-thread/25 flex items-center justify-center">
+            <span className="thread-mark animate-thread-pulse" />
+          </div>
+          <p className="text-sm text-warm-muted max-w-xs mx-auto leading-relaxed">
+            Tap a tile to enter the Territory — timer, journal, and parking lot.
           </p>
         </div>
       )}
 
       {hasSessions && (
         <div className="space-y-3">
-          <h2 className="text-sm font-medium text-warm-muted uppercase tracking-wide">
-            Sessions
-          </h2>
+          <h2 className="section-label">Sessions</h2>
           {sessions.map((session) => (
             <SessionCard
               key={session.id}
@@ -250,27 +236,28 @@ export default function DailyView() {
         <button
           type="button"
           onClick={() => navigate({ type: 'evening' })}
-          className="card w-full text-left hover:border-warm-muted/30 group"
+          className="card w-full text-left group"
         >
           <div className="flex items-center gap-3">
-            <span className="text-2xl">🪞</span>
+            <span className="w-9 h-9 rounded-xl bg-thread/10 text-thread flex items-center justify-center text-sm font-serif">
+              ∿
+            </span>
             <div className="flex-1">
-              <p className="text-sm font-medium text-warm-text">
-                Honest mirror
-              </p>
+              <p className="text-sm font-medium text-ink">Honest mirror</p>
               <p className="text-xs text-warm-muted">
                 End-of-day reflection and notes pile.
               </p>
             </div>
-            <span className="text-warm-light">→</span>
+            <span className="text-warm-light group-hover:text-thread transition-colors">
+              →
+            </span>
           </div>
         </button>
       )}
 
       {eveningReflection && (
-        <div className="card text-center py-3">
-          <span className="text-lg">🪞</span>
-          <p className="text-xs text-warm-muted mt-1">Day reviewed.</p>
+        <div className="surface-quiet text-center py-3.5">
+          <p className="text-xs text-warm-muted">Day reviewed.</p>
         </div>
       )}
     </div>

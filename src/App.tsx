@@ -17,9 +17,17 @@ function AppContent() {
   if (view.type === 'interstitial-journal') return <InterstitialJournalView />
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col relative">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-40 opacity-40"
+        style={{
+          background:
+            'radial-gradient(ellipse 70% 100% at 20% 0%, rgba(107,53,53,0.12), transparent 70%)',
+        }}
+      />
       <Header />
-      <main className="flex-1 px-4 pb-36 max-w-lg mx-auto w-full">
+      <main className="flex-1 px-4 pb-36 max-w-lg mx-auto w-full relative">
         {view.type === 'home' && <DailyView />}
         {view.type === 'threshold' && <ThresholdView />}
         {view.type === 'archive' && <ArchiveView />}

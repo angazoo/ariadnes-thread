@@ -76,7 +76,7 @@ function SortableTile({
     <div
       ref={setNodeRef}
       style={style}
-      className="relative rounded-2xl border border-warm-border/60 overflow-hidden min-h-[132px] flex flex-col"
+      className="relative rounded-2xl border border-warm-border/70 overflow-hidden min-h-[132px] flex flex-col shadow-soft transition-shadow duration-300 hover:shadow-float"
     >
       <button
         type="button"

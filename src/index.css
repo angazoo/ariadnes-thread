@@ -9,39 +9,63 @@
 
   body {
     @apply bg-cream text-warm-text font-sans antialiased;
-    background-color: #f4f1eb;
+    background-color: #e8e5df;
+    background-image:
+      radial-gradient(ellipse 90% 55% at 50% -8%, rgba(107, 53, 53, 0.07), transparent 55%),
+      radial-gradient(ellipse 60% 40% at 100% 100%, rgba(47, 74, 74, 0.05), transparent 50%),
+      linear-gradient(180deg, #ebe8e2 0%, #e4e1db 100%);
+    background-attachment: fixed;
+    min-height: 100dvh;
   }
 
   ::selection {
-    background: rgba(163, 148, 132, 0.25);
+    background: rgba(107, 53, 53, 0.18);
   }
 }
 
 @layer components {
   .btn-primary {
     @apply px-6 py-3 rounded-2xl font-medium transition-all duration-200
-      bg-warm-text text-cream hover:bg-warm-text/90 active:scale-[0.98];
-    box-shadow: 0 1px 0 rgba(43, 38, 32, 0.12);
+      bg-ink text-cream hover:bg-warm-text active:scale-[0.98];
+    box-shadow: 0 1px 0 rgba(15, 14, 12, 0.2), 0 10px 24px -14px rgba(15, 14, 12, 0.45);
   }
 
   .btn-ghost {
     @apply px-4 py-2 rounded-xl font-medium transition-all duration-200
-      text-warm-muted hover:text-warm-text hover:bg-warm-white active:scale-[0.98];
-    color: #7d736a;
+      text-warm-muted hover:text-warm-text hover:bg-warm-white/80 active:scale-[0.98];
   }
 
   .card {
-    @apply bg-white rounded-2xl border border-warm-border p-4
-      transition-all duration-200;
-    background-color: #f7f3ec;
-    border-color: #ded6cb;
+    @apply rounded-2xl border border-warm-border/80 p-4
+      transition-all duration-200 bg-warm-white/75 backdrop-blur-sm;
+    box-shadow: 0 1px 0 rgba(23, 21, 19, 0.03);
   }
+
+  .card:hover {
+    border-color: rgba(107, 53, 53, 0.18);
+  }
+
+  .surface-quiet {
+    @apply rounded-2xl border border-warm-border/70 bg-warm-white/55 backdrop-blur-sm;
+  }
+
+  .section-label {
+    @apply text-[10px] uppercase tracking-[0.14em] text-warm-muted font-medium;
+  }
+
+  .thread-mark {
+    @apply inline-block w-1.5 h-1.5 rounded-full bg-thread align-middle;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -49,6 +73,16 @@
   }
 }
 
-.animate-fadeIn {
-  animation: fadeIn 0.35s ease-out;
+@keyframes threadPulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.animate-thread-pulse {
+  animation: threadPulse 2.8s ease-in-out infinite;
 }
